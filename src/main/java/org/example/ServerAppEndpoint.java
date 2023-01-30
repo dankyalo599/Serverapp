@@ -9,6 +9,7 @@ import jakarta.websocket.server.ServerEndpoint;
 import jakarta.websocket.Session;
 import org.glassfish.tyrus.core.cluster.RemoteSession;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @ServerEndpoint("/endpoint")
@@ -52,7 +53,10 @@ public class ServerAppEndpoint {
     }
 
 
-   public void  pushData( String message){
+   public static void  pushData( String message) throws IOException {
+        for (Session peer : peers){
+            peer.getBasicRemote().sendText(message);
+        }
 
     }
 

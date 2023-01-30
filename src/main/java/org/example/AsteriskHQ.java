@@ -5,14 +5,14 @@ import ch.loway.oss.ari4java.AriVersion;
 import ch.loway.oss.ari4java.generated.AriWSHelper;
 import ch.loway.oss.ari4java.generated.models.*;
 import ch.loway.oss.ari4java.tools.ARIException;
-import ch.loway.oss.ari4java.tools.RestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Handler;
+
 
 
 public class AsteriskHQ {
@@ -32,7 +32,7 @@ public class AsteriskHQ {
         this.Password = password;
     }
 
-    public boolean start() throws ARIException {
+    public boolean start() {
 
         try {
             ari = ARI.build(Address, "hello-world", UserName, Password, AriVersion.ARI_1_6_0);
@@ -57,6 +57,8 @@ public class AsteriskHQ {
         private String channel2;
         private String bridge;
     }
+
+
 
     /**
      * Extension of the AriWSHelper to handle the events from Asterisk.
@@ -84,23 +86,31 @@ public class AsteriskHQ {
 //        }
 
         @Override
-        protected void onStasisStart(StasisStart message) {
-            System.out.println("Fermon testing " +ermessage.getChannel().getCaller().getNumb());
+        protected void onStasisStart(StasisStart message)  {
+        try {
+            ServerAppEndpoint.pushData(message.getChannel().getCaller().getNumber());
+            System.out.println("Fermon testing " + message.getChannel().getCaller().getNumber());
+        }
+        catch(IOException e){
+            e.printStackTrace();
 
+            }
 
             // StasisStart is created by both the Stasis dialplan app and a call to the channels API in ARI,
             // so we check an argument set in the create channel code and ignore
-//            logger.debug("onStasisStart, chan id: {}, name: {}", message.getChannel().getId(), message.getChannel().getName());
-//            if (message.getArgs() != null && !message.getArgs().isEmpty() && "me".equals(message.getArgs().get(0))) {
-//                logger.debug("started by me, not processing...");
-//                return;
-//            }
+            logger.debug("onStasisStart, chan id: {}, name: {}", message.getChannel().getId(), message.getChannel().getName());
+            if (message.getArgs() != null && !message.getArgs().isEmpty() && "me".equals(message.getArgs().get(0))) {
+                logger.debug("started by me, not processing...");
+                return;
+            }
             // was not created by "me" so we assume it's from the Stasis dialplan app
             // create a State object and extract the info...
-            State state = new State();
-            state.from = message.getChannel().getCaller().getNumber();
-            state.to = message.getChannel().getDialplan().getExten();
-            // 902 & 903 are "virtual" dialplan extensions that should call endpoint 100 or 200
+//            public void onServerMessage(Session session, Message message) {
+//                sessions.get(message.getToUserName())
+//                        .getBasicRemote() // see also getAsyncRemote()
+//                        .sendText(message.getContent());
+//            }
+//            // 902 & 903 are "virtual" dialplan extensions that should call endpoint 100 or 200
 //            if ("902".equals(state.to) || "903".equals(state.to)) {
 //                state.to = "902".equals(state.to) ? "100" : "200";
 //                logger.debug("Call received on virtual extension changed to {}", state.to);
